@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var ProductChannel = make(chan Product,50)
+
 type Employee struct {
 	name string
 }
@@ -30,23 +32,25 @@ func (e Employee) executeTask(t Task) int {
 }
 
 func pickupTask(e Employee) {
+
+
 	sum := 1
 	for sum < SimulationTime {
 		sum += 1
-
-
 		mutex := &sync.Mutex{}
 		mutex.Lock()
-		x:= len(taskList)
+		x:= len(MainChannel)
 
 
-		if x > 0 && len(productList) < productListSize{
+		if x > 0 && len(ProductChannel) < productListSize{
 
+			if version==1 {
 
 				fmt.Println("I picked up the task: ", e)
-				Product := Product{e.executeTask(taskList[0]), e}
-				productList = append(productList, Product)
-				taskList = taskList[:copy(taskList[0:], taskList[1:])]
+			}
+				Product := Product{e.executeTask(<-MainChannel), e}
+				ProductChannel<-Product
+
 				mutex.Unlock()
 
 		}else {

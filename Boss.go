@@ -8,24 +8,32 @@ import (
 	"time"
 )
 
-func Boss() {
+
+var MainChannel = make(chan Task,20)
+
+type Boss struct {
+	name string
+	surname string
+}
+
+
+func (b Boss)newTask() {
 	sum := 1
 	for sum < SimulationTime {
 		sum += 1
 
-		if len(taskList) < taskListSize {
-
+		if len(MainChannel) < taskListSize {
 
 
 			task := createTask(rand.Intn(TaskArgRange), rand.Intn(TaskArgRange), operator(rand.Intn(4)))
 			atomic.AddUint64(&counter, 1)
-			fmt.Println("The Boss have a new task!")
+			if version ==1 {
 
+				fmt.Println("The Boss have a new task!")
+			}
 			mutex := &sync.Mutex{}
 			mutex.Lock()
-
-			taskList = append(taskList, task)
-
+			MainChannel<-task
 			mutex.Unlock()
 		}
 		time.Sleep(time.Duration(rand.Intn(NewTaskTime)) * time.Second)

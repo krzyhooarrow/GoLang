@@ -7,24 +7,28 @@ import (
 	"time"
 )
 
-type Customer struct
-{
+type Customer struct {
 	name string
-
 }
 
-func (C Customer)pickupProduct(){
+func (C Customer) pickupProduct() {
+	sum := 1
+	for sum < SimulationTime {
+		sum += 1
 
-	mutex:=&sync.Mutex{}
-	mutex.Lock()
-	x:= len(productList)
-	mutex.Unlock()
-	if x>0 {
+		mutex := &sync.Mutex{}
 		mutex.Lock()
-		productList = productList[:copy(taskList[0:], taskList[1:])]
+		x := len(ProductChannel)
 		mutex.Unlock()
-		fmt.Println("Client bought new product")
-
+		if x > 0 {
+			mutex.Lock()
+			if version == 1 {
+				fmt.Println("Client bought new product", <-ProductChannel)
+			} else {
+				<-ProductChannel
+			}
+			mutex.Unlock()
+		}
+		time.Sleep(time.Duration(rand.Intn(Clientinterval)) * time.Second)
 	}
-	time.Sleep(time.Duration(rand.Intn(Clientinterval)) * time.Second)
 }
