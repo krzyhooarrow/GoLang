@@ -12,18 +12,19 @@ type Customer struct {
 }
 
 func (C Customer) pickupProduct() {
-	sum := 1
-	for sum < SimulationTime {
-		sum += 1
+
+	for 1<3 {
 
 		mutex := &sync.Mutex{}
 		mutex.Lock()
 		x := len(ProductChannel)
 		mutex.Unlock()
+
 		if x > 0 {
 			mutex.Lock()
 			if version == 1 {
-				fmt.Println("Client bought new product", <-ProductChannel)
+				p:= <-ProductChannel
+				fmt.Println("Client bought new product {", p.value , p.identifier.name,"}")
 			} else {
 				<-ProductChannel
 			}
