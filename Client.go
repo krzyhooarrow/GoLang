@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"sync"
 	"time"
 )
 
@@ -12,24 +11,16 @@ type Customer struct {
 }
 
 func (C Customer) pickupProduct() {
+	var Product = &Product{}
 
-	for 1<3 {
-
-		mutex := &sync.Mutex{}
-		mutex.Lock()
-		x := len(ProductChannel)
-		mutex.Unlock()
-
-		if x > 0 {
-			mutex.Lock()
+	for  {
+		time.Sleep(time.Duration(rand.Intn(ClientInterval)) * time.Second)
 			if version == 1 {
-				p:= <-ProductChannel
-				fmt.Println("Client bought new product {", p.value , p.identifier.name,"}")
+				outputP<-Product
+				fmt.Println("Client bought new product", Product)
 			} else {
-				<-ProductChannel
+				outputP<-Product
 			}
-			mutex.Unlock()
-		}
-		time.Sleep(time.Duration(rand.Intn(Clientinterval)) * time.Second)
+
 	}
 }

@@ -1,87 +1,76 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
-	"sync"
+	"strconv"
 	"time"
 )
 
-var counterEmp = 0
-var ProductChannel = make(chan Product, productListSize)
-var EmployersStatistics [EmployersCounter] int
-var EmployersList [EmployersCounter] Employee
-
 type Employee struct {
-	name            string
-	identifier      int
-	status          string
+	name            int
+	status          bool // 1 cierpliwy , 2 niecierpliwy
 	bufferedMachine Machine
+	stat            int
 }
 
-func createEmployee(name string) Employee {
-	e := Employee{}
-	e.name = name
-	e.status = chooseStatus()
-	e.identifier = counterEmp
-	EmployersStatistics[counterEmp] = 0
-	counterEmp++
-	e.bufferedMachine = MachineList[rand.Intn(machineCount)]
-	EmployersList[counterEmp-1] = e
-	return e
-}
-
-func chooseStatus() string {
-	if rand.Intn(2) == 1 {
-		return "patient"
-
-	} else {
-		return "inpatient"
-	}
-}
-func changeMachine() Machine {
-	return MachineList[rand.Intn(machineCount)]
-}
-
-func (e Employee) putTask(t Task) {
-	for 1 < 2 {
-
-		if e.status == "inpatient" {
-			e.bufferedMachine = changeMachine()
-			if e.bufferedMachine.status == false {
-				time.Sleep(time.Duration(walkInterval) * time.Second)
-				e.bufferedMachine.work(t, e)
-				break
-			} else {
-				time.Sleep(time.Duration(1) * time.Second)
-			}
-		} else {
-			if e.bufferedMachine.status == false {
-				e.bufferedMachine.work(t, e)
-				break
-			} else {
-				time.Sleep(time.Duration(1) * time.Second)
-			}
-		}
-	}
-}
-func (e Employee) getProduct(t Task) {
-	ProductChannel <- Product{t.score, e}
+type Map struct {
+	value   int
+	boolean bool
+	task    Task
+	e       Employee
 }
 
 func pickupTask(e Employee) {
 
-	sum := 1
-	for sum < SimulationTime {
-		mutex := &sync.Mutex{}
-		mutex.Lock()
-		x := len(MainChannel)
+	var read = &Task{}
+	for {
+		outputT <- read
+		if version == 1 {
+			fmt.Println("Employee"+strconv.Itoa(e.name), e.stat, e.status, "picked up the task: ", read)
+		} // true = cierpliwy , false = niecierpliwy
+		if read.operation == operator(e.bufferedMachine.machineType) {
 
-		if x > 0 && len(ProductChannel) < productListSize {
+			Map := Map{e.bufferedMachine.machineIdentifier, true, *read, e}
+			if e.status {
+				isAvaible(Map)
+				//cierpliwy czeka az bedzie dostepne
+			} else {
 
-			e.putTask(<-MainChannel)
-		}
-		mutex.Unlock()
+				for Map.boolean {
+					// jak maszyna zajeta to idzie do innej
+					Map.value = rand.Intn(MachineCounter)
+					outputM <- &Map
+					time.Sleep(WalkDelay * time.Second)
+				}
+			}
+			// daje do maszyny zadanie
+			Map.boolean = true
 
-		time.Sleep(time.Duration(rand.Intn(EmployeeTaskPickupDelay)) * time.Second)
+			e.stat++
+			Emp2[e.name]++
+
+			time.Sleep((MachineWorkTime + EmployeeTaskPickupDelay) * time.Second)
+		} else {
+			inputT <- read
+
+		} // taski są tracone potem jeżeli nie mieszczą sie na liscie taskow
 	}
+}
+
+func isAvaible(m Map) {
+	for m.boolean {
+		outputM <- &m
+		time.Sleep(10 * time.Millisecond)
+
+	}
+}
+
+func pickTask(employee Employee, task Task) {
+
+	if version == 1 {
+		fmt.Println("Putting task to storage", task)
+	}
+	Product := Product{task.score, "Employee" + strconv.Itoa(employee.name)}
+	inputP <- &Product
 }

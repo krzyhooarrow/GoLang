@@ -4,87 +4,83 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-
 	"strconv"
 	"time"
 )
-
-var counter uint64
+var Emp[EmployersCounter] Employee
+var Emp2[EmployersCounter] int
 
 func printTime() {
-	for i := 0; i < SimulationTime; i++ {
-		fmt.Println("Seconds passed: ", i)
+	var counter = 0
+	for {
+		fmt.Println("Seconds passed: ", counter)
 		time.Sleep(time.Second)
-	}
-}
-
-func printLists() {
-	sum := 1
-	for sum < SimulationTime {
-		sum += 1
-		fmt.Println("Products list size: ", len(ProductChannel))
-		fmt.Println("Task list size : ", len(MainChannel))
-		time.Sleep(5 * time.Second)
+		counter++
 	}
 }
 
 func userInterface() {
-	var age int
-	for 1< 2 {
+	var in int
+	for {
 
-		fmt.Print("> ")
-		fmt.Scan(&age)
 
-			if age<EmployersCounter {
-				fmt.Println(EmployersList[age], EmployersStatistics[age])
-			}
-			fmt.Println("Products list size: ", len(ProductChannel))
-			fmt.Println("Task list size : ", len(MainChannel))
+		fmt.Scan(&in)
+		if in<EmployersCounter {
+		fmt.Println("Employee",Emp[in].name,Emp[in].stat,Emp2[in])
+
+		}else if in == 20 {
+			printT<-true
+			printM<-true
+			printP<-true
 		}
+
 	}
 
-
-func loudMode() {
-	go printLists()
-	printTime()
 }
 
-func quietMode() {
-	userInterface()
-}
 
-func main() {
+func mainEvent() {
+
+	go storeProduct()
+	go storeTask()
+	go storeMachine()
 
 	boss := Boss{"Krzysiu", "Ibisz"}
 	go boss.newTask()
-	for i := 0; i < machineCount; i++ {
-		if rand.Intn(2) == 1 {
-			mach := Machine{i, "+", rand.Intn(avgMachineWorkTime), false}
-			MachineList[i] = mach
-		} else {
-			mach := Machine{i, "*", rand.Intn(avgMachineWorkTime), false}
-			MachineList[i] = mach
-		}
 
+	for i := 0; i < MachineCounter; i++ {
+		inputM <- &Machine{i, rand.Intn(2), false}
 	}
+
 	for i := 0; i < EmployersCounter; i++ {
-		employer := createEmployee("Employee" + strconv.Itoa(i))
+		employer := Employee{i, rand.Intn(2) != 0, storage[rand.Intn(MachineCounter)],0}
+		Emp[i] = employer
 		go pickupTask(employer)
-	} // pracownik dostaje randomowo przydzielona maszyne
+	}
 
 	for i := 0; i < ClientCounter; i++ {
 		Client := Customer{"Client" + strconv.Itoa(i)}
 		go Client.pickupProduct()
 	}
+}
 
-
+func main() {
 
 	if len(os.Args) > 1 { //tryb gadatliwy jezeli podamy dowolny argument
 		version = 1
-		loudMode()
+		mainEvent()
+
+		printTime()
+
 	} else { // tryb spokojny bez podawania argumentow
 		version = 2
-		quietMode()
+		mainEvent()
+
+		userInterface()
 	}
+
+
+
+
 
 }

@@ -2,54 +2,71 @@ package main
 
 import (
 	"fmt"
-	"sync"
 	"time"
 )
 
-var MachineList [machineCount] Machine
-
 type Machine struct {
 	machineIdentifier int
-	machineType       string // 1 = adder 2 = multi
-	machineSpeed      int
-	status            bool
+	machineType       int // 1 = adder 2 = multi
+	machineStatus     bool
 }
 
-func (m Machine) work(t Task, e Employee) {
-	if m.machineType == t.operation {
+var inputM = make(chan *Machine)
+var outputM = make(chan *Map)
+var printM = make(chan bool)
 
-		mutex := sync.Mutex{}
-		mutex.Lock()
-		m.status = true
-		mutex.Unlock()
-		if version == 1 {
 
-		fmt.Println(e.status,e.name,"{",EmployersStatistics[e.identifier],"} used machine",m.machineIdentifier,"ZZZZ... working...ZZZZ ... ")}
-		time.Sleep(time.Duration(m.machineSpeed) * time.Second)
-		EmployersStatistics[e.identifier]++
-		m.executeTask(t, e)
-		mutex.Lock()
-		m.status = false
-		mutex.Unlock()
-	}	// jak nie to porzuca zadanie
+var storage [MachineCounter]Machine
+func storeMachine() {
+	var capatity = 0
+	for {
+		select {
+		case in := <-machineChanGuard(capatity < MachineCounter, inputM):
+			storage[capatity] = *in
+			capatity++
+
+		case out := <-outputM:
+			if storage[out.value].machineStatus {
+				out.boolean = true
+			} else {
+
+				storage[out.value].machineStatus = true
+				out.boolean = false
+				go func() {
+					out.task.score=calculateValue(out.task)
+					time.Sleep(MachineWorkTime * time.Second)
+					pickTask(out.e,out.task)
+					storage[out.value].machineStatus = false
+				}()
+			}
+		case <-printM:
+			fmt.Println(storage)
+		}
+	}
 }
 
 
-func (m Machine) executeTask(t Task, e Employee) {
-
+func calculateValue(t Task) int {
 	if t.operation == "+" {
-		t.score = t.arg2 + t.arg1
+		return  t.arg2 + t.arg1
 	}
 	if t.operation == "-" {
-		t.score = t.arg2 - t.arg1
+		return t.arg2 - t.arg1
 	}
 	if t.operation == "/" {
 		if t.arg1 != 0 {
-			t.score = t.arg2 / t.arg1
+			return t.arg2 / t.arg1
 		}
 	}
 	if t.operation == "*" {
-		t.score = t.arg2 * t.arg1
+		return t.arg2 * t.arg1
 	}
-	e.getProduct(t)
+	return 0
+}
+
+func machineChanGuard(b bool, c chan *Machine) chan *Machine {
+	if !b {
+		return nil
+	}
+	return c
 }
