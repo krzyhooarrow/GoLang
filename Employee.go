@@ -2,60 +2,95 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
-	"sync"
+	"strconv"
 	"time"
 )
 
-var ProductChannel = make(chan Product,50)
-
 type Employee struct {
-	name string
+	name            int
+	status          bool // 1 cierpliwy , 2 niecierpliwy
+	bufferedMachine Machine
+	stat            int
 }
 
-func (e Employee) executeTask(t Task) int {
-	if t.operation == "+" {
-		return t.arg2 + t.arg1
-	}
-	if t.operation == "-" {
-		return t.arg2 - t.arg1
-	}
-	if t.operation == "/" {
-		if t.arg1 != 0 {
-			return t.arg2 / t.arg1
-		}
-	}
-	if t.operation == "*" {
-		return t.arg2 * t.arg1
-	}
-	return 0
+type Map struct {
+	value   int
+	boolean bool
+	task    Task
+	e       Employee
 }
 
 func pickupTask(e Employee) {
 
+	var read = &Task{}
+	for {
+		outputT <- read
+		if version == 1 {
+			fmt.Println("Employee"+strconv.Itoa(e.name), e.stat, e.status, "picked up the task: ", read)
+		} // true = cierpliwy , false = niecierpliwy
 
-	sum := 1
-	for sum < SimulationTime {
-		sum += 1
-		mutex := &sync.Mutex{}
-		mutex.Lock()
-		x:= len(MainChannel)
+		if read.operation == operator(e.bufferedMachine.machineType) {
 
+			Map := Map{e.bufferedMachine.machineIdentifier, true, *read, e}
+			if e.status {
+				isAvaible(Map)
+				//cierpliwy czeka az bedzie dostepne
+			} else {
 
-		if x > 0 && len(ProductChannel) < productListSize{
-
-			if version==1 {
-
-				fmt.Println("I picked up the task: ", e)
+				for Map.boolean {
+					// jak maszyna zajeta to idzie do innej
+					Map.value = rand.Intn(MachineCounter)
+					outputM <- &Map
+					time.Sleep(WalkDelay * time.Second)
+				}
 			}
-				Product := Product{e.executeTask(<-MainChannel), e}
-				ProductChannel<-Product
+			// daje do maszyny zadanie
+			Map.boolean = true
 
-				mutex.Unlock()
+			e.stat++
+			Emp2[e.name]++
 
-		}else {
-		mutex.Unlock()}
+			time.Sleep((MachineWorkTime + EmployeeTaskPickupDelay) * time.Second)
+		} else {
+			inputT <- read
 
-		time.Sleep(time.Duration(rand.Intn(EmployeeTaskPickupDelay)) * time.Second)
+		} // taski są tracone potem jeżeli nie mieszczą sie na liscie taskow
 	}
+}
+
+func isAvaible(m Map) {
+	for m.boolean {
+		outputM <- &m
+		time.Sleep(10 * time.Millisecond)
+
+	}
+}
+
+func pickTask(m Map) {	// w value jest numer maszyny
+
+
+	Product := Product{m.task.score, "Employee" + strconv.Itoa(m.e.name)}
+	if m.task.score == math.MinInt32 {
+		m.e.reportError(m.value)
+		inputT<-&m.task
+		m.value = rand.Intn(MachineCounter) // zmiana maszyny
+
+	}else {
+		inputP <- &Product
+
+		if version == 1 {
+			fmt.Println("Putting task to storage", m.task)
+		}
+
+	}
+	}
+
+func (e Employee )reportError(value int)  {
+	if version == 1 {
+
+		fmt.Println("MACHINE", value, "ERROR NEED TO BE FIXED  ")
+	}
+	receiveMessage <- value
 }

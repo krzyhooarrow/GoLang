@@ -1,3 +1,0 @@
-Program wywołujemy w trybie "głośnym" podając dowolny argument np ./src 123
-Domyślnie program odpalany jest w trybie "spokojnym" 
-W trybie spokojnym dane wyświetlane są po wpisaniu dowolnych argumentów.

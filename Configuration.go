@@ -1,12 +1,17 @@
 package main
 
 var version int
-var EmployeeTaskPickupDelay = 3
-var SimulationTime = 10000
-var EmployersCounter = 10
-var NewTaskTime = 2
-var TaskArgRange = 50
-var taskListSize = 20
-var productListSize = 100
-var Clientinterval = 10
-var ClientCounter = 5
+const EmployeeTaskPickupDelay = 5
+const EmployersCounter = 15
+const NewTaskTime = 3
+const TaskArgRange = 100
+const taskListSize = 20
+const productListSize = 20
+const ClientInterval = 10
+const ClientCounter = 50
+const MachineCounter  = 5
+const MachineWorkTime = 5
+const WalkDelay  = 1
+const ServiceEmployeeCounter = 2
+const ServiceEmployeeWalkDelay  = 10
+const damagePropability  = 0.80

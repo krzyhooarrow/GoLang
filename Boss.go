@@ -3,39 +3,25 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"sync"
-	"sync/atomic"
 	"time"
 )
 
-
-var MainChannel = make(chan Task,20)
-
 type Boss struct {
-	name string
+	name    string
 	surname string
 }
 
+func (b Boss) newTask() {
 
-func (b Boss)newTask() {
-	sum := 1
-	for sum < SimulationTime {
-		sum += 1
+	for {
 
-		if len(MainChannel) < taskListSize {
+		task := createTask(rand.Intn(TaskArgRange), rand.Intn(TaskArgRange), operator(rand.Intn(2)))
 
-
-			task := createTask(rand.Intn(TaskArgRange), rand.Intn(TaskArgRange), operator(rand.Intn(4)))
-			atomic.AddUint64(&counter, 1)
-			if version ==1 {
-
-				fmt.Println("The Boss have a new task!")
-			}
-			mutex := &sync.Mutex{}
-			mutex.Lock()
-			MainChannel<-task
-			mutex.Unlock()
+		if version == 1 {
+			fmt.Println("The Boss have a new task!", task)
 		}
-		time.Sleep(time.Duration(rand.Intn(NewTaskTime)) * time.Second)
+
+		inputT <- &task
+		time.Sleep(NewTaskTime * time.Second)
 	}
 }
